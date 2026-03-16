@@ -1,14 +1,14 @@
 import random
+
 import streamlit as st
 
 from logic_utils import (
+    check_guess,
     get_range_for_difficulty,
     parse_guess,
-    check_guess,
-    update_score
+    update_score,
 )
 
-st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
@@ -31,6 +31,17 @@ attempt_limit_map = {
 attempt_limit = attempt_limit_map[difficulty]
 
 low, high = get_range_for_difficulty(difficulty)
+guess_key = f"guess_input_{difficulty}"
+
+
+def start_new_game():
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.attempts = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
+    st.session_state.last_hint = ""
+    st.session_state[guess_key] = ""
+
 
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
@@ -39,7 +50,7 @@ if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1
+    st.session_state.attempts = 0
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -49,14 +60,18 @@ if "status" not in st.session_state:
 
 if "history" not in st.session_state:
     st.session_state.history = []
+
 if "last_hint" not in st.session_state:
     st.session_state.last_hint = ""
+
+if guess_key not in st.session_state:
+    st.session_state[guess_key] = ""
 
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "
-    f"Attempts left: {attempt_limit - st.session_state.attempts}"
+    f"Guess a number between {low} and {high}. "
+    f"Attempts left: {max(0, attempt_limit - st.session_state.attempts)}"
 )
 
 with st.expander("Developer Debug Info"):
@@ -66,24 +81,15 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
-raw_guess = st.text_input(
-    "Enter your guess:",
-    key=f"guess_input_{difficulty}"
-)
+raw_guess = st.text_input("Enter your guess:", key=guess_key)
 
 col1, col2, col3 = st.columns(3)
 with col1:
     submit = st.button("Submit Guess 🚀")
 with col2:
-    new_game = st.button("New Game 🔁")
+    st.button("New Game 🔁", on_click=start_new_game)
 with col3:
     show_hint = st.checkbox("Show hint", value=True)
-
-if new_game:
-    st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
-    st.success("New game started.")
-    st.rerun()
 
 if st.session_state.status != "playing":
     if st.session_state.status == "won":
@@ -91,33 +97,22 @@ if st.session_state.status != "playing":
     else:
         st.error("Game over. Start a new game to try again.")
     st.stop()
-#FIXME: The logic breaks here because the secret is sometimes treated as a string, which can cause the check_guess function to return "Invalid" and not update the score or attempts correctly.
-if submit:
-    st.session_state.attempts += 1
 
+if submit:
     ok, guess_int, err = parse_guess(raw_guess)
 
     if not ok:
         st.session_state.history.append(raw_guess)
+        st.session_state.last_hint = ""
         st.error(err)
-        #FIXME: The logic breaks here because the attempts are incremented even for invalid inputs, which can lead to a faster game over.
     else:
+        st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
-#Info :
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
+        outcome, message = check_guess(guess_int, st.session_state.secret)
 
-        outcome, message = check_guess(guess_int, secret)
-#FIXME: The logic breaks here
         if show_hint:
-            if outcome == "Win":
-                st.toast(message)
-            else:
-                st.toast(message)
+            st.toast(message)
             st.session_state.last_hint = message
-            # FIXME:Logic breaks here
         else:
             st.session_state.last_hint = ""
             if outcome != "Win":
@@ -130,20 +125,19 @@ if submit:
         )
 
         if outcome == "Win":
-            st.balloons()
             st.session_state.status = "won"
+            st.balloons()
             st.success(
                 f"You won! The secret was {st.session_state.secret}. "
                 f"Final score: {st.session_state.score}"
             )
-        else:
-            if st.session_state.attempts >= attempt_limit:
-                st.session_state.status = "lost"
-                st.error(
-                    f"Out of attempts! "
-                    f"The secret was {st.session_state.secret}. "
-                    f"Score: {st.session_state.score}"
-                )
+        elif st.session_state.attempts >= attempt_limit:
+            st.session_state.status = "lost"
+            st.error(
+                f"Out of attempts! "
+                f"The secret was {st.session_state.secret}. "
+                f"Score: {st.session_state.score}"
+            )
 
 if show_hint:
     if st.session_state.last_hint:
