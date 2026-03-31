@@ -1,12 +1,32 @@
-
 # PawPal+ Project Reflection
 
 ## 1. System Design
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+The initial UML design for the PawPal+ system includes four main classes with the following responsibilities:
+
+1. **Task**: Represents individual pet care activities (e.g., feeding, walking, grooming)
+   - Attributes: name, duration_minutes, priority, category, completed status
+   - Responsibilities: Store task metadata and determine priority level via `is_high_priority()` method
+   - Converts task data to dictionary format via `to_dict()` for serialization
+
+2. **Pet**: Represents a pet in the system
+   - Attributes: name, species, age, special_needs
+   - Responsibilities: Maintain pet information and characteristics
+   - Converts pet data to dictionary format via `to_dict()` method
+
+3. **Schedule**: Manages the daily pet care schedule
+   - Attributes: planned_tasks list, skipped_tasks list, total_minutes
+   - Responsibilities: Generate optimized schedules from a task list given time constraints, track which tasks fit and which are skipped, provide explanations and summaries of scheduling decisions
+   - Core methods: `generate()` (schedule optimization), `explain()` (decision rationale), `summary()` (human-readable overview)
+
+4. **Owner**: Represents the pet owner
+   - Attributes: name, available_minutes (daily time budget), tasks list, pet reference
+   - Responsibilities: Manage pet ownership, track available time for pet care, manage the task list, serve as the entry point to request a schedule
+   - Core methods: `add_task()`, `remove_task()`, `get_tasks()`, `request_schedule()` (delegates to Schedule.generate())
+
+**Key Design Relationships**: Owner owns a Pet (1:1), Owner manages multiple Tasks (1:N), and Owner requests a Schedule which optimizes those tasks given the available time constraint.
 
 **b. Design changes**
 
