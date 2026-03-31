@@ -44,8 +44,25 @@ The initial UML design for the PawPal+ system includes four main classes with th
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+The scheduler makes a critical tradeoff between **simplicity and conflict prevention**:
+
+**Tradeoff: Lightweight Conflict Detection vs. Constraint-Based Scheduling**
+
+- **What we chose**: The scheduler uses a **lightweight, post-hoc conflict detection strategy**. It:
+  1. Uses a simple sequential Two-Tier algorithm to fit tasks into the time budget (no conflict awareness during scheduling)
+  2. Assigns tasks to time slots sequentially (task 1 → task 2 → task 3, etc.)
+  3. After scheduling completes, detects overlaps by checking if scheduled_start < other_task.scheduled_end AND other_task.scheduled_start < scheduled_end
+  4. Returns warning messages about detected conflicts rather than preventing them upfront
+- **The alternative we rejected**: A constraint-based scheduler that:
+  1. Would model all task constraints (duration, priority, pet, time availability) as a weighted optimization problem
+  2. Would use algorithms like bin packing, graph coloring, or integer linear programming to prevent conflicts during scheduling
+  3. Would guarantee 100% conflict-free schedules (or fail completely if impossible)
+- **Why this tradeoff is reasonable**:
+  - **Simplicity**: For a pet owner app, scheduling doesn't require zero conflicts—the owner can manually adjust tasks. Our lightweight approach is easy to understand and debug.
+  - **Performance**: Constraint-based solvers are computationally expensive (NP-hard in general). For small task (~10-15) daily schedules, our O(n²) conflict detection is fast enough.
+  - **User Control**: Warnings are better than silent failures. The owner sees conflicts and can choose to accept them, reschedule, or reduce task duration.
+  - **Realistic**: Real pet care often has overlapping activities (e.g., "supervise dog while feeding cat"). Rigid conflict prevention could make schedules inflexible.
+- **Limitation**: If >20 tasks are scheduled simultaneously with many short durations, false conflict warnings could increase. However, this is rare in daily pet schedules.
 
 ---
 

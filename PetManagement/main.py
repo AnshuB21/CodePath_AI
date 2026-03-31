@@ -24,8 +24,9 @@ def main():
     
     # ===== STEP 1: Create an Owner =====
     print("[STEP 1] Creating Owner...")
-    # Create an owner with 120 minutes (2 hours) available per day for pet care
-    owner = Owner(name="Sarah", available_minutes=120)
+    # Create an owner with 200 minutes (3+ hours) available per day for pet care
+    # Increased to accommodate conflict detection demonstration tasks
+    owner = Owner(name="Sarah", available_minutes=200)
     print(f"✓ Owner '{owner.name}' created with {owner.available_minutes} minutes available\n")
     
     # ===== STEP 2: Create Pets =====
@@ -71,7 +72,8 @@ def main():
         name="Walk Buddy in the park",
         duration_minutes=45,
         priority="high",
-        category="walking"
+        category="walking",
+        pet_name="Buddy"
     )
     dog.add_task(task1)
     print(f"✓ Task added to {dog.name}: {task1.name} ({task1.duration_minutes} min, {task1.priority} priority)")
@@ -80,7 +82,8 @@ def main():
         name="Feed Buddy breakfast",
         duration_minutes=10,
         priority="high",
-        category="feeding"
+        category="feeding",
+        pet_name="Buddy"
     )
     dog.add_task(task2)
     print(f"✓ Task added to {dog.name}: {task2.name} ({task2.duration_minutes} min, {task2.priority} priority)")
@@ -90,7 +93,8 @@ def main():
         name="Insulin injection for Whiskers",
         duration_minutes=5,
         priority="critical",
-        category="medication"
+        category="medication",
+        pet_name="Whiskers"
     )
     cat.add_task(task3)
     print(f"✓ Task added to {cat.name}: {task3.name} ({task3.duration_minutes} min, {task3.priority} priority)")
@@ -99,7 +103,8 @@ def main():
         name="Feed Whiskers lunch",
         duration_minutes=10,
         priority="high",
-        category="feeding"
+        category="feeding",
+        pet_name="Whiskers"
     )
     cat.add_task(task4)
     print(f"✓ Task added to {cat.name}: {task4.name} ({task4.duration_minutes} min, {task4.priority} priority)")
@@ -108,7 +113,8 @@ def main():
         name="Clean Whiskers' litter box",
         duration_minutes=5,
         priority="medium",
-        category="cleaning"
+        category="cleaning",
+        pet_name="Whiskers"
     )
     cat.add_task(task5)
     print(f"✓ Task added to {cat.name}: {task5.name} ({task5.duration_minutes} min, {task5.priority} priority)")
@@ -118,7 +124,8 @@ def main():
         name="Interactive play with Polly",
         duration_minutes=20,
         priority="high",
-        category="enrichment"
+        category="enrichment",
+        pet_name="Polly"
     )
     parrot.add_task(task6)
     print(f"✓ Task added to {parrot.name}: {task6.name} ({task6.duration_minutes} min, {task6.priority} priority)")
@@ -127,10 +134,45 @@ def main():
         name="Feed Polly seeds",
         duration_minutes=5,
         priority="high",
-        category="feeding"
+        category="feeding",
+        pet_name="Polly"
     )
     parrot.add_task(task7)
     print(f"✓ Task added to {parrot.name}: {task7.name} ({task7.duration_minutes} min, {task7.priority} priority)\n")
+    
+    # ===== STEP 3B: Add Conflicting Tasks to Demonstrate Conflict Detection =====
+    print("[STEP 3B] Adding Conflicting Tasks (for conflict detection demo)...")
+    
+    from datetime import datetime, timedelta
+    
+    # Create two tasks with overlapping times to demonstrate conflict detection
+    conflict_task1 = Task(
+        name="Groom Buddy",
+        duration_minutes=30,
+        priority="medium",
+        category="grooming",
+        pet_name="Buddy"
+    )
+    # Set this task to be scheduled from 10:00 AM to 10:30 AM
+    conflict_task1.scheduled_start_time = datetime.now().replace(hour=10, minute=0, second=0)
+    conflict_task1.scheduled_end_time = datetime.now().replace(hour=10, minute=30, second=0)
+    dog.add_task(conflict_task1)
+    print(f"✓ Conflict task 1: {conflict_task1.name} ({conflict_task1.scheduled_start_time.strftime('%H:%M')}-{conflict_task1.scheduled_end_time.strftime('%H:%M')})")
+    
+    # Create another task that overlaps with the first one
+    conflict_task2 = Task(
+        name="Brush Buddy's teeth",
+        duration_minutes=15,
+        priority="medium",
+        category="grooming",
+        pet_name="Buddy"
+    )
+    # Set this task to be scheduled from 10:15 AM to 10:30 AM (OVERLAPS with above!)
+    conflict_task2.scheduled_start_time = datetime.now().replace(hour=10, minute=15, second=0)
+    conflict_task2.scheduled_end_time = datetime.now().replace(hour=10, minute=30, second=0)
+    dog.add_task(conflict_task2)
+    print(f"✓ Conflict task 2: {conflict_task2.name} ({conflict_task2.scheduled_start_time.strftime('%H:%M')}-{conflict_task2.scheduled_end_time.strftime('%H:%M')})")
+    print(f"  ⚠️  NOTE: These tasks overlap from 10:15-10:30 AM!\n")
     
     # ===== STEP 4: Display All Tasks =====
     print("[STEP 4] All Tasks in System...")
